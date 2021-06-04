@@ -6,7 +6,8 @@ import zelda.graphics.SpriteSheet;
 import zelda.window.Window;
 import zelda.world.tile.Floor;
 import zelda.world.tile.Tile;
-import zelda.world.tile.Wall;
+import zelda.world.tile.colliding.CollidingTile;
+import zelda.world.tile.colliding.Wall;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics;
@@ -57,7 +58,7 @@ public class World {
     }
 
     public static boolean isFree(int nextX, int nextY) {
-        // FIXME left colision is shit.
+        // FIXME left collision is shitty.
         int x1 = (nextX + 1) / TILE_SIZE;
         int y1 = (nextY + 14) / TILE_SIZE;
 
@@ -70,10 +71,10 @@ public class World {
         int x4 = (nextX + 4 + TILE_SIZE - 1)  / TILE_SIZE;
         int y4 = (nextY + 7 + TILE_SIZE ) / TILE_SIZE;
 
-        return !((tiles[x1 + (y1 * WIDTH)] instanceof Wall) ||
-                 (tiles[x2 + (y2 * WIDTH)] instanceof Wall) ||
-                 (tiles[x3 + (y3 * WIDTH)] instanceof Wall) ||
-                 (tiles[x4 + (y4 * WIDTH)] instanceof Wall));
+        return !((tiles[x1 + (y1 * WIDTH)] instanceof CollidingTile) ||
+                 (tiles[x2 + (y2 * WIDTH)] instanceof CollidingTile) ||
+                 (tiles[x3 + (y3 * WIDTH)] instanceof CollidingTile) ||
+                 (tiles[x4 + (y4 * WIDTH)] instanceof CollidingTile));
     }
 
     public void render(final Graphics g) {

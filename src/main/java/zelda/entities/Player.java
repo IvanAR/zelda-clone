@@ -1,6 +1,7 @@
 package zelda.entities;
 
 import zelda.Game;
+import zelda.entities.weapon.Arrow;
 import zelda.entities.weapon.Bow;
 import zelda.entities.weapon.Sword;
 import zelda.entities.weapon.Weapon;
@@ -13,6 +14,7 @@ import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
+import static zelda.entities.weapon.Arrow.*;
 import static zelda.world.World.*;
 import static zelda.world.tile.Tile.TILE_SIZE;
 
@@ -24,6 +26,7 @@ public class Player extends Entity {
     private static final double RUNNING_SPEED  = 2.5;
     private boolean right, left, up, down, running;
     private boolean damaged;
+    private boolean shooting;
 
     private int stamina = 100;
 
@@ -36,6 +39,7 @@ public class Player extends Entity {
 
     private Weapon[] weapons = new Weapon[2];
     private int currentWeapon = Weapon.sword;
+    private int arrowAmmo = 20;
 
     private final BufferedImage[] rightMovement = new BufferedImage[6];
     private final BufferedImage[] leftMovement  = new BufferedImage[6];
@@ -46,7 +50,7 @@ public class Player extends Entity {
     private int life  = 100, maxLife = 100;
     private int dodgeRate = 90;
 
-    public Player(int x, int y, int width, int height, SpriteSheet spriteSheet) {
+        public Player(int x, int y, int width, int height, SpriteSheet spriteSheet) {
         super(x, y, width, height, spriteSheet.getSprite(30,0,PLAYER_WIDTH, PLAYER_HEIGHT));
         setSpeed(WALKING_SPEED);
 
@@ -82,6 +86,7 @@ public class Player extends Entity {
                 stamina++;
         }
 
+        // TODO check collisions with enemies
         if (up && isFree(getX(), (int)(y - getSpeed()))) {
             y -= getSpeed();
             direction = upDirection;
@@ -115,6 +120,26 @@ public class Player extends Entity {
             if (damaged) {
                 damaged = false;
             }
+        }
+
+        if (shooting) {
+            arrowAmmo--; // FIXME ammo when weapon get
+            shooting = false;
+            int dx = 0;
+            int dy = 0;
+            if (direction == rightDirection) {
+                dx = 1;
+            } else if (direction == leftDirection){
+                dx = -1;
+            } else if (direction == upDirection) {
+                dy = -1;
+            } else if (direction == downDirection) {
+                dy = 1;
+            }
+
+            // TODO add arrow Sprite
+            final Arrow arrow = new Arrow(getX() + 8, getY() + 11, ARROW_WIDTH, ARROW_HEIGHT, null, dx, dy);
+            Game.addArrow(arrow);
         }
 
         collectItem();
@@ -191,6 +216,11 @@ public class Player extends Entity {
         }
     }
 
+    public void shoot(KeyEvent e) {
+        // TODO if BOW is selected and IF have ammo
+        shooting = currentWeapon == Weapon.bow && e.getKeyCode() == KeyEvent.VK_F && arrowAmmo > 0;
+    }
+
     public boolean isDead() {
         return life <= 0;
     }
@@ -219,17 +249,17 @@ public class Player extends Entity {
     }
 
     private void collectItem() {
-        for (int i = 0; i < Game.entities.size(); i++) {
-            final Entity e = Game.entities.get(i);
+        for (int i = 0; i < Game.getEntities().size(); i++) {
+            final Entity e = Game.getEntities().get(i);
             if (this.collidesWith(e)) {
                 if (e instanceof LifeHeart) {
                     this.setLife(getMaxLife());
-                    Game.entities.remove(e);
+                    Game.removeEntity(e);
                     return;
                 }
                 if (e instanceof Book) {
-                    this.setPower(this.getPower() + 5);
-                    Game.entities.remove(e);
+                    this.setPower(this.getPower() + 20);
+                    Game.removeEntity(e);
                     return;
                 }
                 if (e instanceof Bow) {
@@ -237,7 +267,7 @@ public class Player extends Entity {
                         // TODO new Bow
                         weapons[Weapon.bow] = (Bow) e;
                     }
-                    Game.entities.remove(e);
+                    Game.removeEntity(e);
                     return;
                 }
             }

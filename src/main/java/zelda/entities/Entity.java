@@ -14,12 +14,15 @@ public class Entity {
     private double speed = 0.8;
     private int power = 5;
 
+    private final Rectangle mask;
+
     public Entity(int x, int y, int width, int height, BufferedImage sprite) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.sprite = sprite;
+        this.mask = new Rectangle(x + getMaskX(), y + getMaskY(), width, height);
     }
 
     public void render(final Graphics g) {
@@ -112,5 +115,9 @@ public class Entity {
 
     public void setPower(int power) {
         this.power = power;
+    }
+
+    public Rectangle getMask() {
+        return mask;
     }
 }

@@ -3,8 +3,7 @@ package zelda.entities;
 import zelda.Game;
 import zelda.graphics.SpriteSheet;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 import static zelda.world.World.isFree;
@@ -14,7 +13,7 @@ public class Enemy extends Entity {
 
     private final Player player;
 
-    private final int maxFps = 5;
+    private final int maxFps = 4;
     private int upDownIndex = 0, rightLeftIndex = 0;
     private final int upDownMaxIndex = 3, rightLeftMaxIndex = 3;
 
@@ -22,11 +21,14 @@ public class Enemy extends Entity {
     private int direction = downDirection;
     private int frames = 0;
 
+    private int life  = 100, maxLife = 100;
+    private int dodgeRate = 10;
+    private boolean damaged;
+
     private final BufferedImage[] rightMovement = new BufferedImage[4];
     private final BufferedImage[] leftMovement = new BufferedImage[4];
     private final BufferedImage[] downMovement = new BufferedImage[4];
     private final BufferedImage[] upMovement = new BufferedImage[4];
-
 
     public Enemy(int x, int y, int width, int height, SpriteSheet spriteSheet, final Player player) {
         // FIXME we could set Player as static and apply to a singleton
@@ -50,26 +52,26 @@ public class Enemy extends Entity {
     @Override
     public void tick() {
 //        if (Game.random.nextInt(100) < 60) { // Randomizes Enemy movement
+        getMask().setLocation(getXPlusSpeed(), getY());
+
         if (!collidesWith(player)) {
-            if (getX() < player.getX() && isFree(getXPlusSpeed(), getY()) && !isSelfCollinding(getXPlusSpeed(), getY())) {
+            if (getX() < player.getX() && isFree(getXPlusSpeed(), getY()) && !isSelfColliding()) {
                 x += getSpeed();
                 direction = rightDirection;
-            } else if (getX() > player.getX() && isFree(getXMinusSpeed(), getY()) && !isSelfCollinding(getXMinusSpeed(), getY())) {
+            } else if (getX() > player.getX() && isFree(getXMinusSpeed(), getY()) && !isSelfColliding()) {
                 x -= getSpeed();
                 direction = leftDirection;
             }
-            if (getY() < player.getY() && isFree(getX(), getYPlusSpeed()) && !isSelfCollinding(getX(), getYPlusSpeed())) {
+            if (getY() < player.getY() && isFree(getX(), getYPlusSpeed()) && !isSelfColliding()) {
                 y += getSpeed();
                 direction = downDirection;
-            } else if (getY() > player.getY() && isFree(getX(), getYMinusSpeed()) && !isSelfCollinding(getX(), getYMinusSpeed())) {
+            } else if (getY() > player.getY() && isFree(getX(), getYMinusSpeed()) && !isSelfColliding()) {
                 y -= getSpeed();
                 direction = upDirection;
             }
         } else {
-            // TODO hits are too fast, change it.
-            hit();
+            attack();
         }
-//        }
 
         frames++;
         if (frames == maxFps) {
@@ -85,24 +87,45 @@ public class Enemy extends Entity {
                 if (upDownIndex > upDownMaxIndex)
                     upDownIndex = 0;
             }
+            if (damaged) {
+                damaged = false;
+            }
+        }
+
+        if (isDead()) {
+            Game.removeEnemy(this);
         }
     }
 
-    public boolean isSelfCollinding(int nextX, int nextY) {
-        final Rectangle currentEnemy = getMask(nextX, nextY);
-        for (Enemy enemy : Game.enemies) {
+    public boolean isSelfColliding() {
+        for (Enemy enemy : Game.getEnemies()) {
             if (enemy == this) continue;
-            final Rectangle collidingEnemy = new Rectangle(enemy.getX() + getMaskX(), enemy.getY() + getMaskY(), getMaskW(), getMaskH());
-            if (currentEnemy.intersects(collidingEnemy)) {
+//            final Rectangle collidingEnemy = new Rectangle(enemy.getX() + getMaskX(), enemy.getY() + getMaskY(), getMaskW(), getMaskH());
+            // TODO apply enemy mask and location sum here
+            if (getMask().intersects(enemy.getMask())) {
                 return true;
             }
         }
         return false;
     }
 
-    private Rectangle getMask(int nextX, int nextY) {
-        return new Rectangle(nextX + getMaskX(), nextY + getMaskY(), getMaskW(), getMaskH());
+    // TODO set a better name
+    public void hit(int hit) {
+        if (Game.random.nextInt(100) > dodgeRate) {
+            damaged = true;
+            this.life -= hit;
+        } else {
+            System.out.println("miss");
+        }
     }
+
+    public boolean isDead() {
+        return life <= 0;
+    }
+
+//    private Rectangle getMask(int nextX, int nextY) {
+//        return new Rectangle(nextX + getMaskX(), nextY + getMaskY(), getMaskW(), getMaskH());
+//    }
 
     @Override
     public void render(Graphics g) {
@@ -118,10 +141,13 @@ public class Enemy extends Entity {
         } else if (direction == downDirection) {
             g.drawImage(downMovement[upDownIndex], getXCamera(), getYCamera(), null);
         }
+        if (damaged) {
+            g.setColor(new Color(255, 0, 0, 100));
+            g.fillOval(getXCamera(), getYCamera(), getWidth(), getHeight());
+        }
     }
 
-    private void hit() {
+    private void attack() {
         player.setHit(getPower());
     }
-
 }

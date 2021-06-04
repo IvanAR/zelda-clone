@@ -3,6 +3,7 @@ package zelda;
 import zelda.entities.Enemy;
 import zelda.entities.Entity;
 import zelda.entities.Player;
+import zelda.entities.weapon.Arrow;
 import zelda.graphics.SpriteSheet;
 import zelda.graphics.UI;
 import zelda.window.Window;
@@ -22,8 +23,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
     private Thread thread;
     private boolean isRunning;
 
-    public static List<Entity> entities;
-    public static List<Enemy> enemies;
+    private static List<Entity> entities;
+    private static List<Arrow> bullets;
+    private static List<Enemy> enemies;
     private Player player;
     private World world;
     private Window window;
@@ -40,6 +42,7 @@ public class Game extends Canvas implements Runnable, KeyListener {
     private void init() {
         random = new Random();
         entities = new ArrayList<>();
+        bullets = new ArrayList<>();
         enemies = new ArrayList<>();
 
         window = new Window(this);
@@ -77,8 +80,10 @@ public class Game extends Canvas implements Runnable, KeyListener {
             for (int i = 0; i < entities.size(); i++) {
                 entities.get(i).tick();
             }
+            for (int i = 0; i < bullets.size(); i++) {
+                bullets.get(i).tick();
+            }
         }
-
     }
 
     public void render() {
@@ -94,6 +99,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
         world.render(g);
         for (int i = 0; i < entities.size(); i++) {
             entities.get(i).render(g);
+        }
+        for (int i = 0; i < bullets.size(); i++) {
+            bullets.get(i).render(g);
         }
         ui.render(g);
 
@@ -135,17 +143,43 @@ public class Game extends Canvas implements Runnable, KeyListener {
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
+    public void keyPressed(final KeyEvent e) {
         player.move(e);
+        player.shoot(e);
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
+    public void keyReleased(final KeyEvent e) {
         player.stop(e);
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {
+    public void keyTyped(final KeyEvent e) {
     }
 
+    public static void removeEntity(final Entity entity) {
+        entities.remove(entity);
+    }
+
+    public static void removeEnemy(final Enemy enemy) {
+        entities.remove(enemy);
+    }
+
+    public static void addArrow(final Arrow arrow) {
+        bullets.add(arrow);
+    }
+
+    public static void removeArrow(final Arrow arrow) {
+        bullets.remove(arrow);
+    }
+
+    // TODO would be better to not expose it this way
+    public static List<Enemy> getEnemies() {
+        return enemies;
+    }
+
+    // TODO would be better to not expose it this way
+    public static List<Entity> getEntities() {
+        return entities;
+    }
 }
