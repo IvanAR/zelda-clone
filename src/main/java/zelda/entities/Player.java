@@ -22,8 +22,8 @@ public class Player extends Entity {
     public static final int PLAYER_WIDTH = 20;
     public static final int PLAYER_HEIGHT = 30;
 
-    private static final double WALKING_SPEED  = 1.5;
-    private static final double RUNNING_SPEED  = 2.5;
+    private static final double WALKING_SPEED = 1.5;
+    private static final double RUNNING_SPEED = 2.5;
     private boolean right, left, up, down, running;
     private boolean damaged;
     private boolean shooting;
@@ -42,16 +42,19 @@ public class Player extends Entity {
     private int arrowAmmo = 20;
 
     private final BufferedImage[] rightMovement = new BufferedImage[6];
-    private final BufferedImage[] leftMovement  = new BufferedImage[6];
-    private final BufferedImage[] downMovement  = new BufferedImage[8];
-    private final BufferedImage[] upMovement  = new BufferedImage[8];
+    private final BufferedImage[] leftMovement = new BufferedImage[6];
+    private final BufferedImage[] downMovement = new BufferedImage[8];
+    private final BufferedImage[] upMovement = new BufferedImage[8];
     private final BufferedImage[] stopMoveDirection = new BufferedImage[4];
+    private final BufferedImage bookCollectedMove;
 
-    private int life  = 100, maxLife = 100;
+
+    private boolean collectingBook = false;
+    private int life = 100, maxLife = 100;
     private int dodgeRate = 90;
 
-        public Player(int x, int y, int width, int height, SpriteSheet spriteSheet) {
-        super(x, y, width, height, spriteSheet.getSprite(30,0,PLAYER_WIDTH, PLAYER_HEIGHT));
+    public Player(int x, int y, int width, int height, SpriteSheet spriteSheet) {
+        super(x, y, width, height, spriteSheet.getSprite(30, 0, PLAYER_WIDTH, PLAYER_HEIGHT));
         setSpeed(WALKING_SPEED);
 
         for (int i = 0; i < rightMovement.length; i++) {
@@ -67,9 +70,11 @@ public class Player extends Entity {
             downMovement[i] = spriteSheet.getSprite(i * 30, 30, PLAYER_WIDTH, PLAYER_HEIGHT);
         }
         stopMoveDirection[rightDirection] = spriteSheet.getSprite(120, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
-        stopMoveDirection[leftDirection]  = spriteSheet.getSprite(150, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
-        stopMoveDirection[upDirection]    = spriteSheet.getSprite(60, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
-        stopMoveDirection[downDirection]  = spriteSheet.getSprite(30, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+        stopMoveDirection[leftDirection] = spriteSheet.getSprite(150, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+        stopMoveDirection[upDirection] = spriteSheet.getSprite(60, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+        stopMoveDirection[downDirection] = spriteSheet.getSprite(30, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+        this.bookCollectedMove = spriteSheet.getSprite(420, 0, PLAYER_WIDTH, PLAYER_HEIGHT + 20);
 
         weapons[Weapon.sword] = new Sword(x, y);
         weapons[Weapon.bow] = null;
@@ -87,15 +92,15 @@ public class Player extends Entity {
         }
 
         // TODO check collisions with enemies
-        if (up && isFree(getX(), (int)(y - getSpeed()))) {
+        if (up && isFree(getX(), (int) (y - getSpeed()))) {
             y -= getSpeed();
             direction = upDirection;
-        } else if (down && isFree(getX(), (int)(y + getSpeed()))) {
+        } else if (down && isFree(getX(), (int) (y + getSpeed()))) {
             y += getSpeed();
             direction = downDirection;
         }
 
-        if (right && isFree( (int) (x + getSpeed()), getY())) {
+        if (right && isFree((int) (x + getSpeed()), getY())) {
             x += getSpeed();
             direction = rightDirection;
         } else if (left && isFree((int) (x - getSpeed()), getY())) {
@@ -125,20 +130,8 @@ public class Player extends Entity {
         if (shooting) {
             arrowAmmo--; // FIXME ammo when weapon get
             shooting = false;
-            int dx = 0;
-            int dy = 0;
-            if (direction == rightDirection) {
-                dx = 1;
-            } else if (direction == leftDirection){
-                dx = -1;
-            } else if (direction == upDirection) {
-                dy = -1;
-            } else if (direction == downDirection) {
-                dy = 1;
-            }
-
             // TODO add arrow Sprite
-            final Arrow arrow = new Arrow(getX() + 8, getY() + 11, ARROW_WIDTH, ARROW_HEIGHT, null, dx, dy);
+            final Arrow arrow = new Arrow(getX() + 8, getY() + 11, ARROW_WIDTH, ARROW_HEIGHT, null, direction); // TODO direction
             Game.addArrow(arrow);
         }
 
@@ -158,26 +151,34 @@ public class Player extends Entity {
     }
 
     private void drawPlayer(final Graphics g) {
-        switch (direction) {
-            case rightDirection:
-                g.drawImage(rightMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
-                // FIXME verify nullable
-                drawWeapon(g, weapons[currentWeapon], rightDirection);
-                break;
-            case leftDirection:
-                g.drawImage(leftMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
-                drawWeapon(g, weapons[currentWeapon], leftDirection);
-                break;
-            case upDirection:
-                drawWeapon(g, weapons[currentWeapon], upDirection);
-                g.drawImage(upMovement[upDownIndex], getXCamera(), getYCamera(), null);
-                break;
-            case downDirection:
-                g.drawImage(downMovement[upDownIndex], getXCamera(), getYCamera(), null);
-                drawWeapon(g, weapons[currentWeapon], downDirection);
-                break;
-            default: g.drawImage(stopMoveDirection[direction], getXCamera(), getYCamera(), null); break;
+        if (collectingBook) {
+            g.drawImage(bookCollectedMove, getXCamera(), getYCamera(), null);
+            // TODO stop here and make it stays more time in the paint with enemies frozen around
+            this.collectingBook = false;
+        } else {
+            switch (direction) {
+                case rightDirection:
+                    g.drawImage(rightMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
+                    drawWeapon(g, weapons[currentWeapon], rightDirection);
+                    break;
+                case leftDirection:
+                    g.drawImage(leftMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
+                    drawWeapon(g, weapons[currentWeapon], leftDirection);
+                    break;
+                case upDirection:
+                    drawWeapon(g, weapons[currentWeapon], upDirection);
+                    g.drawImage(upMovement[upDownIndex], getXCamera(), getYCamera(), null);
+                    break;
+                case downDirection:
+                    g.drawImage(downMovement[upDownIndex], getXCamera(), getYCamera(), null);
+                    drawWeapon(g, weapons[currentWeapon], downDirection);
+                    break;
+                default:
+                    g.drawImage(stopMoveDirection[direction], getXCamera(), getYCamera(), null);
+                    break;
+            }
         }
+
     }
 
     private void drawWeapon(final Graphics g, final Weapon weapon, final int direction) {
@@ -206,7 +207,14 @@ public class Player extends Entity {
         if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
             running = true;
         }
+    }
 
+    public void shoot(KeyEvent e) {
+        // TODO if BOW is selected and IF have ammo
+        shooting = currentWeapon == Weapon.bow && e.getKeyCode() == KeyEvent.VK_F && arrowAmmo > 0;
+    }
+
+    public void changeWeapon(KeyEvent e) {
         // TODO apply constant to weapon here
         if (e.getKeyCode() == KeyEvent.VK_1 && currentWeapon != Weapon.sword) {
             currentWeapon = Weapon.sword;
@@ -214,11 +222,6 @@ public class Player extends Entity {
         if (e.getKeyCode() == KeyEvent.VK_2 && currentWeapon != Weapon.bow) {
             currentWeapon = Weapon.bow;
         }
-    }
-
-    public void shoot(KeyEvent e) {
-        // TODO if BOW is selected and IF have ammo
-        shooting = currentWeapon == Weapon.bow && e.getKeyCode() == KeyEvent.VK_F && arrowAmmo > 0;
     }
 
     public boolean isDead() {
@@ -260,6 +263,7 @@ public class Player extends Entity {
                 if (e instanceof Book) {
                     this.setPower(this.getPower() + 20);
                     Game.removeEntity(e);
+                    this.collectingBook = true;
                     return;
                 }
                 if (e instanceof Bow) {

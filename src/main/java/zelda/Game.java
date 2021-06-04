@@ -80,6 +80,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
             for (int i = 0; i < entities.size(); i++) {
                 entities.get(i).tick();
             }
+            for (int i = 0; i < enemies.size(); i++) {
+                enemies.get(i).tick();
+            }
             for (int i = 0; i < bullets.size(); i++) {
                 bullets.get(i).tick();
             }
@@ -99,6 +102,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
         world.render(g);
         for (int i = 0; i < entities.size(); i++) {
             entities.get(i).render(g);
+        }
+        for (int i = 0; i < enemies.size(); i++) {
+            enemies.get(i).render(g);
         }
         for (int i = 0; i < bullets.size(); i++) {
             bullets.get(i).render(g);
@@ -145,6 +151,7 @@ public class Game extends Canvas implements Runnable, KeyListener {
     @Override
     public void keyPressed(final KeyEvent e) {
         player.move(e);
+        player.changeWeapon(e);
         player.shoot(e);
     }
 
@@ -162,7 +169,7 @@ public class Game extends Canvas implements Runnable, KeyListener {
     }
 
     public static void removeEnemy(final Enemy enemy) {
-        entities.remove(enemy);
+        enemies.remove(enemy);
     }
 
     public static void addArrow(final Arrow arrow) {
@@ -173,7 +180,6 @@ public class Game extends Canvas implements Runnable, KeyListener {
         bullets.remove(arrow);
     }
 
-    // TODO would be better to not expose it this way
     public static List<Enemy> getEnemies() {
         return enemies;
     }

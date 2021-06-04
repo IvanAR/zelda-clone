@@ -8,6 +8,7 @@ public class SpriteSheet {
     public static final SpriteSheet objectSpriteSheet = new SpriteSheet("/spritesheet/world/objects.png");
     public static final SpriteSheet playerSpriteSheet = new SpriteSheet("/spritesheet/player/link_spritesheet.png");
     public static final SpriteSheet enemySpriteSheet = new SpriteSheet("/spritesheet/world/npc.png");
+    public static final SpriteSheet objectsSpriteSheet = new SpriteSheet("/spritesheet/world/objects.png");
 
     private BufferedImage spriteSheet;
 

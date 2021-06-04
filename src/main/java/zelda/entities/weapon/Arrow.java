@@ -10,26 +10,33 @@ import java.awt.image.BufferedImage;
 import static zelda.world.World.isFree;
 
 public class Arrow extends Entity {
-    private final int dx, dy;
     private final double speed = 4;
     private final int life = 150;
     private int currentLife = 0;
     private int damage = 50;
+    private final int direction;
 
     public static final int ARROW_WIDTH = 10;
     public static final int ARROW_HEIGHT = 2;
 
-    public Arrow(int x, int y, int width, int height, BufferedImage sprite, int dx, int dy) {
-        // spriteSheet.getSprite(30, 0, PLAYER_WIDTH, PLAYER_HEIGHT); // TODO add sprite
+    public Arrow(int x, int y, int width, int height, BufferedImage sprite, int direction) {
         super(x, y, width, height, sprite);
-        this.dx = dx;
-        this.dy = dy;
+        this.direction = direction;
     }
 
     @Override
     public void tick() {
-        x += dx * speed;
-        y += dy * speed;
+        // TODO this logic can be extracted
+        if (direction == rightDirection) {
+            x += 1 * speed;;
+        } else if (direction == leftDirection){
+            x += -1 * speed;;
+        } else if (direction == upDirection) {
+            y += -1 * speed;
+        } else if (direction == downDirection) {
+            y += 1 * speed;
+        }
+
         currentLife++;
         if (currentLife == life) {
             Game.removeArrow(this);
@@ -53,7 +60,15 @@ public class Arrow extends Entity {
 
     @Override
     public void render(Graphics g) {
-        g.setColor(Color.ORANGE);
-        g.fillRect(getXCamera(), getYCamera(), ARROW_WIDTH, ARROW_HEIGHT);
+        g.setColor(Color.WHITE);
+        if (direction == rightDirection) {
+            g.fillRect(getXCamera(), getYCamera(), ARROW_WIDTH, ARROW_HEIGHT);
+        } else if (direction == leftDirection) {
+            g.fillRect(getXCamera(), getYCamera(), ARROW_WIDTH, ARROW_HEIGHT);
+        } else if (direction == upDirection) {
+            g.fillRect(getXCamera(), getYCamera() - 15, ARROW_HEIGHT, ARROW_WIDTH);
+        } else if (direction == downDirection) {
+            g.fillRect(getXCamera() + 4, getYCamera(), ARROW_HEIGHT, ARROW_WIDTH);
+        }
     }
 }

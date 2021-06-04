@@ -40,7 +40,7 @@ public class World {
                         player.setY(y * TILE_SIZE);
                     } else if (pixelColor == 0xFFff0000) {
                         final Enemy enemy = new Enemy(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, 20, SpriteSheet.enemySpriteSheet, player);
-                        entities.add(enemy);
+//                        entities.add(enemy);
                         enemies.add(enemy);
                     } else if (pixelColor == 0xFF1fff00) {
                         entities.add(new LifeHeart(x * TILE_SIZE, y * TILE_SIZE, LifeHeart.DEFAULT_WIDTH, LifeHeart.DEFAULT_HEIGHT, LifeHeart.LIFE_HEART_SPRITE));

@@ -2,11 +2,10 @@ package zelda.entities;
 
 import zelda.world.Camera;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class Entity {
+public abstract class Entity {
     protected double x, y, width, height;
     protected final int rightDirection = 0, leftDirection = 1, upDirection = 2, downDirection = 3;
     private final BufferedImage sprite;
@@ -29,12 +28,12 @@ public class Entity {
         g.drawImage(sprite, getXCamera(), getYCamera(), null);
     }
 
-    public void tick(){}
+    public void tick() {};
 
     public boolean collidesWith(final Entity ce) {
-        final Rectangle e1Mask = new Rectangle(this.getX() + this.getMaskX(), this.getY() + this.getMaskY(), this.getMaskW(), this.getMaskH());
-        final Rectangle e2Mask = new Rectangle(ce.getX() + ce.getMaskX(), ce.getY() + ce.getMaskY(), ce.getMaskW(), ce.getMaskH());
-        return e1Mask.intersects(e2Mask);
+        getMask().setLocation(this.getX() + this.getMaskX(), this.getY() + this.getMaskY());
+        ce.getMask().setLocation(ce.getX() + ce.getMaskX(), ce.getY() + ce.getMaskY());
+        return getMask().intersects(ce.getMask());
     }
 
     public int getX() {
@@ -91,14 +90,6 @@ public class Entity {
 
     public int getMaskY() {
         return 0;
-    }
-
-    public int getMaskW() {
-        return getWidth();
-    }
-
-    public int getMaskH() {
-        return getHeight();
     }
 
     public double getSpeed() {

@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 import static zelda.world.World.isFree;
 
 public class Enemy extends Entity {
-    public static final BufferedImage ENEMY_SPRITE = SpriteSheet.enemySpriteSheet.getSprite(1, 6, 16, 20);
+    public static final BufferedImage ENEMY_SPRITE = SpriteSheet.enemySpriteSheet.getSprite(0, 7, 16, 22);
 
     private final Player player;
 
@@ -17,7 +17,6 @@ public class Enemy extends Entity {
     private int upDownIndex = 0, rightLeftIndex = 0;
     private final int upDownMaxIndex = 3, rightLeftMaxIndex = 3;
 
-    private final int rightDirection = 0, leftDirection = 1, upDirection = 2, downDirection = 3;
     private int direction = downDirection;
     private int frames = 0;
 
@@ -32,7 +31,7 @@ public class Enemy extends Entity {
 
     public Enemy(int x, int y, int width, int height, SpriteSheet spriteSheet, final Player player) {
         // FIXME we could set Player as static and apply to a singleton
-        super(x, y, width, height, spriteSheet.getSprite(0, 7, 16, 22)); // TODO fix sizes here
+        super(x, y, width, height, ENEMY_SPRITE); // TODO fix sizes here
         this.player = player;
 
         for (int i = 0; i < downMovement.length; i++) {
@@ -52,25 +51,23 @@ public class Enemy extends Entity {
     @Override
     public void tick() {
 //        if (Game.random.nextInt(100) < 60) { // Randomizes Enemy movement
-        getMask().setLocation(getXPlusSpeed(), getY());
-
-        if (!collidesWith(player)) {
-            if (getX() < player.getX() && isFree(getXPlusSpeed(), getY()) && !isSelfColliding()) {
+        if (collidesWith(player)) {
+            attack();
+        } else {
+            if (getX() < player.getX() && isFree(getXPlusSpeed(), getY()) && !isSelfColliding(getXPlusSpeed(), getY())) {
                 x += getSpeed();
                 direction = rightDirection;
-            } else if (getX() > player.getX() && isFree(getXMinusSpeed(), getY()) && !isSelfColliding()) {
+            } else if (getX() > player.getX() && isFree(getXMinusSpeed(), getY()) && !isSelfColliding(getXMinusSpeed(), getY())) {
                 x -= getSpeed();
                 direction = leftDirection;
             }
-            if (getY() < player.getY() && isFree(getX(), getYPlusSpeed()) && !isSelfColliding()) {
+            if (getY() < player.getY() && isFree(getX(), getYPlusSpeed()) && !isSelfColliding(getX(), getYPlusSpeed())) {
                 y += getSpeed();
                 direction = downDirection;
-            } else if (getY() > player.getY() && isFree(getX(), getYMinusSpeed()) && !isSelfColliding()) {
+            } else if (getY() > player.getY() && isFree(getX(), getYMinusSpeed()) && !isSelfColliding(getX(), getYMinusSpeed())) {
                 y -= getSpeed();
                 direction = upDirection;
             }
-        } else {
-            attack();
         }
 
         frames++;
@@ -97,11 +94,11 @@ public class Enemy extends Entity {
         }
     }
 
-    public boolean isSelfColliding() {
+    public boolean isSelfColliding(int nextX, int nextY) {
+        // TODO we could use the collidesWith in Entity
+        getMask().setLocation(nextX, nextY);
         for (Enemy enemy : Game.getEnemies()) {
             if (enemy == this) continue;
-//            final Rectangle collidingEnemy = new Rectangle(enemy.getX() + getMaskX(), enemy.getY() + getMaskY(), getMaskW(), getMaskH());
-            // TODO apply enemy mask and location sum here
             if (getMask().intersects(enemy.getMask())) {
                 return true;
             }
@@ -123,15 +120,10 @@ public class Enemy extends Entity {
         return life <= 0;
     }
 
-//    private Rectangle getMask(int nextX, int nextY) {
-//        return new Rectangle(nextX + getMaskX(), nextY + getMaskY(), getMaskW(), getMaskH());
-//    }
 
     @Override
     public void render(Graphics g) {
 //        super.render(g);;
-        //g.setColor(BLUE); Testing mask here
-//        g.fillRect(getX() + maskX - Camera.x, getY() + maskY - Camera.y, maskW, maskH);
         if (direction == rightDirection) {
             g.drawImage(rightMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
         } else if (direction == leftDirection) {
