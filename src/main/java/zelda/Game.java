@@ -86,6 +86,9 @@ public class Game extends Canvas implements Runnable, KeyListener {
             for (int i = 0; i < bullets.size(); i++) {
                 bullets.get(i).tick();
             }
+            if (enemies.isEmpty()) {
+                System.out.println("Next level");
+            }
         }
     }
 
@@ -152,7 +155,7 @@ public class Game extends Canvas implements Runnable, KeyListener {
     public void keyPressed(final KeyEvent e) {
         player.move(e);
         player.changeWeapon(e);
-        player.shoot(e);
+        player.attack(e);
     }
 
     @Override

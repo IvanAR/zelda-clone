@@ -28,7 +28,12 @@ public class Player extends Entity {
     private boolean damaged;
     private boolean shooting;
 
+    private boolean slashing;
+    private int slashUpDownIndex = 0, slashRightLeftIndex = 0;
+    private final int slashMaxIndex = 4;
+
     private int stamina = 100;
+    private int maxStamina = 100;
 
     private int frames = 0;
     private final int maxFps = 5;
@@ -40,14 +45,20 @@ public class Player extends Entity {
     private Weapon[] weapons = new Weapon[2];
     private int currentWeapon = Weapon.sword;
     private int arrowAmmo = 20;
+    private final int AMMUNITION_SIZE = 20;
 
-    private final BufferedImage[] rightMovement = new BufferedImage[6];
-    private final BufferedImage[] leftMovement = new BufferedImage[6];
-    private final BufferedImage[] downMovement = new BufferedImage[8];
-    private final BufferedImage[] upMovement = new BufferedImage[8];
+    private final BufferedImage[] moveRight = new BufferedImage[6];
+    private final BufferedImage[] moveLeft = new BufferedImage[6];
+    private final BufferedImage[] moveDown = new BufferedImage[8];
+    private final BufferedImage[] moveUp = new BufferedImage[8];
     private final BufferedImage[] stopMoveDirection = new BufferedImage[4];
-    private final BufferedImage bookCollectedMove;
 
+    private final BufferedImage[] slashUp = new BufferedImage[5];
+    private final BufferedImage[] slashDown = new BufferedImage[5];
+    private final BufferedImage[] slashRight = new BufferedImage[5];
+    private final BufferedImage[] slashLeft = new BufferedImage[5];
+
+    private final BufferedImage bookCollectedMove;
 
     private boolean collectingBook = false;
     private int life = 100, maxLife = 100;
@@ -57,22 +68,38 @@ public class Player extends Entity {
         super(x, y, width, height, spriteSheet.getSprite(30, 0, PLAYER_WIDTH, PLAYER_HEIGHT));
         setSpeed(WALKING_SPEED);
 
-        for (int i = 0; i < rightMovement.length; i++) {
-            rightMovement[i] = spriteSheet.getSprite(240 + (i * 30), 120, PLAYER_WIDTH, PLAYER_HEIGHT);
+        // Walking/Running moves
+        for (int i = 0; i < moveRight.length; i++) {
+            moveRight[i] = spriteSheet.getSprite(240 + (i * 30), 120, PLAYER_WIDTH, PLAYER_HEIGHT);
         }
-        for (int i = 0; i < leftMovement.length; i++) {
-            leftMovement[i] = spriteSheet.getSprite(240 + (i * 30), 30, PLAYER_WIDTH, PLAYER_HEIGHT);
+        for (int i = 0; i < moveLeft.length; i++) {
+            moveLeft[i] = spriteSheet.getSprite(240 + (i * 30), 30, PLAYER_WIDTH, PLAYER_HEIGHT);
         }
-        for (int i = 0; i < upMovement.length; i++) {
-            upMovement[i] = spriteSheet.getSprite(i * 30, 120, PLAYER_WIDTH, PLAYER_HEIGHT);
+        for (int i = 0; i < moveUp.length; i++) {
+            moveUp[i] = spriteSheet.getSprite(i * 30, 120, PLAYER_WIDTH, PLAYER_HEIGHT);
         }
-        for (int i = 0; i < downMovement.length; i++) {
-            downMovement[i] = spriteSheet.getSprite(i * 30, 30, PLAYER_WIDTH, PLAYER_HEIGHT);
+        for (int i = 0; i < moveDown.length; i++) {
+            moveDown[i] = spriteSheet.getSprite(i * 30, 30, PLAYER_WIDTH, PLAYER_HEIGHT);
         }
+
         stopMoveDirection[rightDirection] = spriteSheet.getSprite(120, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         stopMoveDirection[leftDirection] = spriteSheet.getSprite(150, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         stopMoveDirection[upDirection] = spriteSheet.getSprite(60, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
         stopMoveDirection[downDirection] = spriteSheet.getSprite(30, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+        // Slashing moves
+        for (int i = 0; i < slashRight.length; i++) {
+            slashRight[i] = spriteSheet.getSprite(240 + (i * 30), 180, PLAYER_WIDTH, PLAYER_HEIGHT);
+        }
+        for (int i = 0; i < slashLeft.length; i++) {
+            slashLeft[i] = spriteSheet.getSprite(240 + (i * 30), 90, PLAYER_WIDTH, PLAYER_HEIGHT);
+        }
+        for (int i = 0; i < slashDown.length; i++) {
+            slashDown[i] = spriteSheet.getSprite(i * 30, 90, PLAYER_WIDTH, PLAYER_HEIGHT);
+        }
+        for (int i = 0; i < slashUp.length; i++) {
+            slashUp[i] = spriteSheet.getSprite(i * 30, 180, PLAYER_WIDTH, PLAYER_HEIGHT);
+        }
 
         this.bookCollectedMove = spriteSheet.getSprite(420, 0, PLAYER_WIDTH, PLAYER_HEIGHT + 20);
 
@@ -82,6 +109,7 @@ public class Player extends Entity {
 
     @Override
     public void tick() {
+        // TODO set stamina recovering state
         if (running && stamina >= 0) {
             setSpeed(RUNNING_SPEED);
             stamina--;
@@ -111,31 +139,54 @@ public class Player extends Entity {
         frames++;
         if (frames == maxFps) {
             frames = 0;
-            if (right || left) {
-                upDownIndex = 0;
-                rightLeftIndex++;
-                if (rightLeftIndex > rightLeftMaxIndex)
-                    rightLeftIndex = 0;
-            } else if (up || down) {
-                upDownIndex++;
-                rightLeftIndex = 0;
-                if (upDownIndex > upDownMaxIndex)
+
+            if (slashing) {
+                if (direction == rightDirection || direction == leftDirection) {
+                    slashUpDownIndex = 0;
+                    slashRightLeftIndex++;
+                    if (slashRightLeftIndex > slashMaxIndex) {
+                        slashRightLeftIndex = 0;
+                        slashing = false;
+                    }
+                } else if (direction == upDirection  || direction == downDirection) {
+                    slashRightLeftIndex = 0;
+                    slashUpDownIndex++;
+                    if (slashUpDownIndex > slashMaxIndex) {
+                        slashUpDownIndex = 0;
+                        slashing = false;
+                    }
+                }
+            } else {
+                if (right || left) {
                     upDownIndex = 0;
+                    rightLeftIndex++;
+                    if (rightLeftIndex > rightLeftMaxIndex)
+                        rightLeftIndex = 0;
+
+                } else if (up || down) {
+                    rightLeftIndex = 0;
+                    upDownIndex++;
+                    if (upDownIndex > upDownMaxIndex)
+                        upDownIndex = 0;
+                }
             }
+
             if (damaged) {
                 damaged = false;
             }
-        }
+            if (collectingBook) {
+                collectingBook = false;
+            }
+            if (shooting) {
+                arrowAmmo--; // FIXME ammo when weapon get out of ammo
+                shooting = false;
+                // TODO add arrow Sprite
+                final Arrow arrow = new Arrow(getX() + 8, getY() + 11, ARROW_WIDTH, ARROW_HEIGHT, null, direction); // TODO direction
+                Game.addArrow(arrow);
+            }
 
-        if (shooting) {
-            arrowAmmo--; // FIXME ammo when weapon get
-            shooting = false;
-            // TODO add arrow Sprite
-            final Arrow arrow = new Arrow(getX() + 8, getY() + 11, ARROW_WIDTH, ARROW_HEIGHT, null, direction); // TODO direction
-            Game.addArrow(arrow);
+            collectItem();
         }
-
-        collectItem();
 
         Camera.x = Camera.clamp(getX() - (Window.WIDTH / 2), 0, (WIDTH * TILE_SIZE) - Window.WIDTH);
         Camera.y = Camera.clamp(getY() - (Window.HEIGHT / 2), 0, (HEIGHT * TILE_SIZE) - Window.HEIGHT);
@@ -152,25 +203,26 @@ public class Player extends Entity {
 
     private void drawPlayer(final Graphics g) {
         if (collectingBook) {
-            g.drawImage(bookCollectedMove, getXCamera(), getYCamera(), null);
             // TODO stop here and make it stays more time in the paint with enemies frozen around
-            this.collectingBook = false;
+            g.drawImage(bookCollectedMove, getXCamera(), getYCamera(), null);
+        } else if (slashing) {
+            drawSlashing(g, direction);
         } else {
             switch (direction) {
                 case rightDirection:
-                    g.drawImage(rightMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
+                    g.drawImage(moveRight[rightLeftIndex], getXCamera(), getYCamera(), null);
                     drawWeapon(g, weapons[currentWeapon], rightDirection);
                     break;
                 case leftDirection:
-                    g.drawImage(leftMovement[rightLeftIndex], getXCamera(), getYCamera(), null);
+                    g.drawImage(moveLeft[rightLeftIndex], getXCamera(), getYCamera(), null);
                     drawWeapon(g, weapons[currentWeapon], leftDirection);
                     break;
                 case upDirection:
                     drawWeapon(g, weapons[currentWeapon], upDirection);
-                    g.drawImage(upMovement[upDownIndex], getXCamera(), getYCamera(), null);
+                    g.drawImage(moveUp[upDownIndex], getXCamera(), getYCamera(), null);
                     break;
                 case downDirection:
-                    g.drawImage(downMovement[upDownIndex], getXCamera(), getYCamera(), null);
+                    g.drawImage(moveDown[upDownIndex], getXCamera(), getYCamera(), null);
                     drawWeapon(g, weapons[currentWeapon], downDirection);
                     break;
                 default:
@@ -184,6 +236,26 @@ public class Player extends Entity {
     private void drawWeapon(final Graphics g, final Weapon weapon, final int direction) {
         if (weapon != null) {
             weapons[currentWeapon].render(g, getXCamera(), getYCamera(), direction);
+        }
+    }
+
+    private void drawSlashing(final Graphics g, final int direction) {
+        switch (direction) {
+            case rightDirection:
+                g.drawImage(slashRight[slashRightLeftIndex], getXCamera(), getYCamera(), null);
+                break;
+            case leftDirection:
+                g.drawImage(slashLeft[slashRightLeftIndex], getXCamera(), getYCamera(), null);
+                break;
+            case upDirection:
+                g.drawImage(slashUp[slashUpDownIndex], getXCamera(), getYCamera(), null);
+                break;
+            case downDirection:
+                g.drawImage(slashDown[slashUpDownIndex], getXCamera(), getYCamera(), null);
+                break;
+            default:
+                g.drawImage(stopMoveDirection[direction], getXCamera(), getYCamera(), null);
+                break;
         }
     }
 
@@ -204,14 +276,26 @@ public class Player extends Entity {
             direction = downDirection;
         }
 
+        // TODO consider if player is moving
         if (e.getKeyCode() == KeyEvent.VK_SHIFT) {
             running = true;
         }
     }
 
-    public void shoot(KeyEvent e) {
-        // TODO if BOW is selected and IF have ammo
-        shooting = currentWeapon == Weapon.bow && e.getKeyCode() == KeyEvent.VK_F && arrowAmmo > 0;
+    public void attack(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_F) {
+            switch (currentWeapon) {
+                case Weapon.sword:
+                    slashing = true;
+                    break;
+                case Weapon.bow:
+                    if (arrowAmmo > 0) {
+                        shooting = true;
+                    }
+                    break;
+            }
+        }
+
     }
 
     public void changeWeapon(KeyEvent e) {
@@ -270,6 +354,8 @@ public class Player extends Entity {
                     if (weapons[Weapon.bow] == null) {
                         // TODO new Bow
                         weapons[Weapon.bow] = (Bow) e;
+                    } else {
+                        arrowAmmo += AMMUNITION_SIZE;
                     }
                     Game.removeEntity(e);
                     return;
@@ -308,6 +394,14 @@ public class Player extends Entity {
 
     public int getMaxLife() {
         return maxLife;
+    }
+
+    public int getStamina() {
+        return stamina;
+    }
+
+    public int getMaxStamina() {
+        return maxStamina;
     }
 
     @Override
