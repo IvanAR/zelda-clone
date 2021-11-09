@@ -77,6 +77,11 @@ public class Game extends Canvas implements Runnable, KeyListener {
             // TODO could be better
             init();
         } else {
+            final Entity currentWeapon = player.getWeapons()[player.getCurrentWeapon()];
+            if (currentWeapon != null) {
+                currentWeapon.tick();
+            }
+
             for (int i = 0; i < entities.size(); i++) {
                 entities.get(i).tick();
             }

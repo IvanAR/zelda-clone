@@ -28,9 +28,9 @@ public class Arrow extends Entity {
     public void tick() {
         // TODO this logic can be extracted
         if (direction == rightDirection) {
-            x += 1 * speed;;
+            x += 1 * speed;
         } else if (direction == leftDirection){
-            x += -1 * speed;;
+            x += -1 * speed;
         } else if (direction == upDirection) {
             y += -1 * speed;
         } else if (direction == downDirection) {

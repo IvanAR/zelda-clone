@@ -89,16 +89,16 @@ public class Player extends Entity {
 
         // Slashing moves
         for (int i = 0; i < slashRight.length; i++) {
-            slashRight[i] = spriteSheet.getSprite(240 + (i * 30), 180, PLAYER_WIDTH, PLAYER_HEIGHT);
+            slashRight[i] = spriteSheet.getSprite(240 + (i * 30) - 4, 178, PLAYER_WIDTH + 9, PLAYER_HEIGHT);
         }
         for (int i = 0; i < slashLeft.length; i++) {
-            slashLeft[i] = spriteSheet.getSprite(240 + (i * 30), 90, PLAYER_WIDTH, PLAYER_HEIGHT);
+            slashLeft[i] = spriteSheet.getSprite(240 + (i * 30) - 4, 88, PLAYER_WIDTH + 9, PLAYER_HEIGHT);
         }
         for (int i = 0; i < slashDown.length; i++) {
-            slashDown[i] = spriteSheet.getSprite(i * 30, 90, PLAYER_WIDTH, PLAYER_HEIGHT);
+            slashDown[i] = spriteSheet.getSprite((i * 30) - i, 85, PLAYER_WIDTH + 5, PLAYER_HEIGHT + 5);
         }
         for (int i = 0; i < slashUp.length; i++) {
-            slashUp[i] = spriteSheet.getSprite(i * 30, 180, PLAYER_WIDTH, PLAYER_HEIGHT);
+            slashUp[i] = spriteSheet.getSprite(i * 30 + i, 175, PLAYER_WIDTH + 4, PLAYER_HEIGHT + 4);
         }
 
         this.bookCollectedMove = spriteSheet.getSprite(420, 0, PLAYER_WIDTH, PLAYER_HEIGHT + 20);
@@ -141,6 +141,8 @@ public class Player extends Entity {
             frames = 0;
 
             if (slashing) {
+                ((Sword) weapons[Weapon.sword]).slash(direction, getX(), getY());
+
                 if (direction == rightDirection || direction == leftDirection) {
                     slashUpDownIndex = 0;
                     slashRightLeftIndex++;
@@ -148,7 +150,7 @@ public class Player extends Entity {
                         slashRightLeftIndex = 0;
                         slashing = false;
                     }
-                } else if (direction == upDirection  || direction == downDirection) {
+                } else if (direction == upDirection || direction == downDirection) {
                     slashRightLeftIndex = 0;
                     slashUpDownIndex++;
                     if (slashUpDownIndex > slashMaxIndex) {
@@ -407,5 +409,13 @@ public class Player extends Entity {
     @Override
     public double getSpeed() {
         return super.getSpeed();
+    }
+
+    public Weapon[] getWeapons() {
+        return this.weapons;
+    }
+
+    public int getCurrentWeapon() {
+        return this.currentWeapon;
     }
 }

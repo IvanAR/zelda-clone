@@ -1,11 +1,18 @@
 package zelda.entities.weapon;
 
+import zelda.Game;
+import zelda.entities.Enemy;
 import zelda.graphics.SpriteSheet;
 
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class Sword extends Weapon {
+    private int damage = 50;
+    private int range  = 5;
+    private boolean slashing;
+    private int direction;
+
     public static final int WIDTH = 6;
     public static final int HEIGHT = 14;
     private static final int UP_SWORD = 0, DOWN_SWORD = 1, RIGHT_SWORD = 2, LEFT_SWORD = 3;
@@ -24,6 +31,38 @@ public class Sword extends Weapon {
 
     public Sword(int x, int y) {
         super(x, y, WIDTH, HEIGHT, SWORD_SPRITES[DOWN_SWORD]);
+    }
+
+    public void slash(int direction, double x, double y) {
+        this.slashing = true;
+        this.direction = direction;
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public void tick() {
+        // FIXME checking is too slow, enemies will not be hit the same time as the player attacks
+        if (this.slashing) {
+            if (direction == rightDirection) {
+                x += range;
+            } else if (direction == leftDirection){
+                x -= range;
+            } else if (direction == upDirection) {
+                y -= range;
+            } else if (direction == downDirection) {
+                y += range;
+            }
+
+            for (int i = 0; i < Game.getEnemies().size(); i++) {
+                final Enemy enemy = Game.getEnemies().get(i);
+                if (this.collidesWith(enemy)) {
+                    enemy.hit(this.getPower() + damage);
+                    return;
+                }
+            }
+            this.slashing = false;
+        }
     }
 
     @Override
@@ -58,5 +97,10 @@ public class Sword extends Weapon {
 
     public BufferedImage getDownSprite() {
         return SWORD_SPRITES[DOWN_SWORD];
+    }
+
+    @Override
+    public int getPower() {
+        return super.getPower() + 5;
     }
 }
